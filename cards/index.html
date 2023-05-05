@@ -59,6 +59,9 @@
     .flashcard.left{
         transform: translate(-100vw);
     }
+    .flashcard.discard{
+      transform: translate(-100vw, 100vh);
+    }
     </style>
 
     <title>Libre-learn</title>
@@ -68,15 +71,15 @@
     <center>
 
 
-      <div id="card-holder" style="position: absolute;left: 0px;top: 10vh;width: 100%; height: 100%; overflow-x: hidden;">
+      <div id="card-holder" style="position: absolute;left: 0px;top: 10vh;width: 100vw; height: 90vh; overflow-x: hidden;" >
       
-      	<div class="flashcard" onclick="toggleFlip(this)">
+      	<div class="flashcard" onclick="toggleFlip(this)" tabindex="-1">
           <div class="flashcard-inner">
             <div class="flashcard-front">
-              <textarea class="flashtext" readonly="true" id="front-text"> . </textarea>  
+              <textarea class="flashtext" readonly="true" id="front-text" tabindex="-1"> . </textarea>  
             </div>
             <div class="flashcard-back">
-              <textarea class="flashtext" readonly="true" id="back-text"> , </textarea>  
+              <textarea class="flashtext" readonly="true" id="back-text" tabindex="-1"> , </textarea>  
             </div>
           </div>
         </div> 
@@ -87,8 +90,21 @@
     
 
     
-      <button onclick=' lastCard()'>Prev </button>
+      <button onclick='lastCard()'>Prev </button>
       <button onclick='nextCard()'>Next </button>
+      <div style="left: 15vw;top: 65vh;width: 75vw; position: absolute; display: flex;">
+        <div style="width: 50%;">
+          <button onclick="discard();">Discard</button>
+          <button onclick="retrieve();">retrieve card</button>
+        </div>
+
+        <div style="width: 50%;">
+          <button onclick="save(true); location.reload()">Shuffle</button>
+          <button onclick="if(confirm('Are you sure?')){localStorage.removeItem('cards:'+window.setId);location.reload();}">Reset</button>
+        </div> 
+      </div>
+
+
     
     
 	  </center>
@@ -98,6 +114,28 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      // https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array#6274398
+      function shuffle(array) {
+          let counter = array.length;
+
+          // While there are elements in the array
+          while (counter > 0) {
+              // Pick a random index
+              let index = Math.floor(Math.random() * counter);
+
+              // Decrease counter by 1
+              counter--;
+
+              // And swap the last element with it
+              let temp = array[counter];
+              array[counter] = array[index];
+              array[index] = temp;
+          }
+
+          return array;
+      }
+    </script>
     <script type="text/javascript">
       let cardTemplate = document.querySelector(".flashcard").cloneNode(true);
       document.querySelector(".flashcard").remove();
@@ -122,21 +160,13 @@
 
       var cardData = localStorage.getItem("cards:"+window.setId);
       if (cardData==undefined){
-        cardData = {todo:set.terms.reverse(), finished: [], showAgain: []};
-      }
+        cardData = {right:set.terms, left: [], discard: []};
+      }else{cardData=JSON.parse(cardData)}
 
 
 
-      function getCard(){
-        if ((cardData.todo.length + cardData.showAgain.length) == 0){
-          return undefined;
-        }
-        // One in 4 chance of reviewing a card
-        if ((Math.floor(Math.random()*4)==0 | cardData.todo.length == 0)&&cardData.showAgain.length!=0){
-          return cardData.showAgain.pop();
-        }
-        return cardData.todo.pop();
-      }
+
+
       function toggleFlip(card){
         if (card.hasAttribute("flip")){
           card.removeAttribute("flip");
@@ -149,20 +179,29 @@
       var left_cards = [];
       var right_cards = [];
       var current_card = undefined;
+      var discard_cards = [];
       // Cards specific code
-      while (1){
-        let card = getCard();
-        if (card == undefined) {break;}
-        if (current_card === undefined){
-          current_card = genCard(card[0], card[1]);
-          document.querySelector("#card-holder").appendChild(current_card);
-        }else{
-          let tmp = genCard(card[0], card[1]);
-          tmp.classList.add("right");
-          document.querySelector("#card-holder").appendChild(tmp);
-          right_cards.unshift(tmp);
-        }
-      }
+
+      let isFirstCard = true;
+      cardData.right.forEach(e=>{
+        let card = genCard(e[0], e[1]);
+        if (!isFirstCard){card.classList.add("right"); right_cards.unshift(card);}
+        else{current_card=card};
+        document.querySelector("#card-holder").appendChild(card);
+        isFirstCard=false;
+      });
+      cardData.left.forEach(e=>{
+        let card = genCard(e[0], e[1]);
+        card.classList.add("left"); left_cards.unshift(card);
+        document.querySelector("#card-holder").appendChild(card);
+      })
+      cardData.discard.forEach(e=>{
+        let card = genCard(e[0], e[1]);
+        card.classList.add("discard"); discard_cards.unshift(card);
+        document.querySelector("#card-holder").appendChild(card);
+      })
+
+
 
       function nextCard(){
         if (right_cards.length != 0){
@@ -170,7 +209,9 @@
           current_card.classList.add("left")
           current_card=right_cards.pop();
           current_card.classList.remove("right");
+          current_card.removeAttribute("flip");
         }
+        save(false);
       }
       function lastCard(){
         if (left_cards.length != 0){
@@ -178,7 +219,36 @@
           current_card.classList.add("right")
           current_card=left_cards.pop();
           current_card.classList.remove("left");
+          current_card.removeAttribute("flip");
         }
+        save(false);
+      }
+
+      function discard(){
+        let newCard;
+
+        if(right_cards.length != 0){
+          newCard=right_cards.pop();
+          newCard.classList.remove("right");
+        }else if (left_cards.length != 0){
+          newCard = left_cards.pop();
+          newCard.classList.remove("left");
+        }else{return;}
+        current_card.classList.add("discard");
+        discard_cards.push(current_card);
+        current_card=newCard;
+        save(false);
+      }
+      function retrieve(){
+        if (discard_cards.length != 0){
+          current_card.classList.add("left")
+          left_cards.push(current_card);
+
+          current_card = discard_cards.pop(0);
+          current_card.classList.remove("discard");
+          current_card.removeAttribute("flip");
+        }
+        save(false);
       }
 
       function genCard(x, y){
@@ -186,6 +256,19 @@
         cardNode.querySelector("#front-text").value = x;
         cardNode.querySelector("#back-text").value = y;
         return cardNode;
+      }
+      let serializeCard = (c)=>{return [c.querySelector("#front-text").value, c.querySelector("#back-text").value];}
+      function save(doShuf){
+        let right_temp = right_cards.map(serializeCard).reverse();
+        right_temp.unshift(serializeCard(current_card));
+        let discard_temp = discard_cards.map(serializeCard).reverse();
+        let left_temp = left_cards.map(serializeCard).reverse();
+        if (doShuf){
+          right_temp=shuffle(right_temp);
+          discard_temp=shuffle(discard_temp);
+          left_temp=shuffle(left_temp);
+        }
+        localStorage.setItem("cards:"+window.setId, JSON.stringify({right:right_temp, left: left_temp, discard: discard_temp}));
       }
 
 
