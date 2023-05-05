@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <style type="text/css">
+
+    </style>
+
+    <title>Libre-learn</title>
+ 
+  </head>
+  <body style="display: none;">
+
+
+
+
+
+
+
+
+
+
+<!-- Score Modal -->
+<div class="modal fade" id="scoreModel" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Scores</h5>
+        <button type="button" class="btn btn-link" onclick="scoreModel.toggle()">X</button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="scoreModel.toggle()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--Setting model-->
+<div class="modal fade" id="settingsModel" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+        <button type="button" class="btn btn-link" onclick="settingsModel.toggle()">X</button>
+      </div>
+      <div class="modal-body">
+        <button class="btn btn-danger" onclick="deleteSet();">Delete set</button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="settingsModel.toggle()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <center>
+
+
+
+
+      <h2>Lorem ipsum dolor sit</h2>
+      <br>
+      <div style="width: 40%;">
+        <img src="/assets/book-open.svg" style="height: 45px;float: left;" onclick="scoreModel.toggle()">
+        <img src="/assets/menu.svg" style="height: 45px;float: right;" onclick="settingsModel.toggle()">
+        <br>
+
+        <div class="d-flex" style="width: 100%;">
+          <button class = "btn btn-primary flex-fill" onclick="setLink('/learn')">Learn</button>
+          <button class = "btn btn-warning flex-fill" onclick="setLink('/cards')">Flashcards</button>
+          <button class = "btn btn-secondary flex-fill" onclick="setLink('/smart')">Smart Flashcards</button>
+          <button class = "btn btn-primary flex-fill" onclick="setLink('/match')">Match up</button>
+        </div>
+
+      </div>
+
+
+
+      <div style="width: 50%;" class="border">
+        <table class="table border" style="width: 100%;">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Term</th>
+              <th scope="col">Definition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="term">
+
+              <th scope="row" class="termNum">1</th>
+              <td class="termTerm"><textarea class="termEdit" rows="4"></textarea> </td>
+              <td class="termDeff"><textarea class="termEdit" rows="4"></textarea> <img src="/assets/x.svg" style="transform: translate(0%, -100%); width: 10%;" onclick="remove(this);" /></td>
+            </tr>
+
+          </tbody>
+
+        </table>
+        <img src="/assets/plus.svg" style="width: 8%; display: block; margin-left: auto; margin-right: auto;" id="addTerm" />
+        </div>
+
+
+  </center>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      var scoreModel = new bootstrap.Modal(document.querySelector("#scoreModel"));
+      var settingsModel = new bootstrap.Modal(document.querySelector("#settingsModel"));
+
+      let termTemplate = document.querySelector(".term").cloneNode(true);
+      document.querySelector(".term").remove();
+
+
+      let sets = JSON.parse(localStorage.getItem("sets") || "[]");
+      if (!location.search.includes("?")){
+        alert("404");
+        location.href = "/";
+      }
+      window.setId = parseInt(location.search.split("?")[1]);
+      var set = sets[window.setId];
+      if (set == undefined){
+        alert("set not found");
+        location.href = "/";
+      }
+
+      document.querySelector("h2").textContent=set.name;
+      let index = 0;
+      set.terms.forEach((term)=>{
+        let termHtml = termTemplate.cloneNode(true);
+        termHtml.querySelector(".termNum").textContent = index;
+        termHtml.querySelector(".termTerm").children[0].value = term[0] || "";
+        termHtml.querySelector(".termDeff").children[0].value = term[1] || "";
+
+
+        termHtml.querySelector(".termTerm").children[0].setAttribute("index", index);
+        termHtml.querySelector(".termDeff").children[0].setAttribute("index", index);
+
+        termHtml.querySelector(".termTerm").children[0].oninput = (t)=>{
+          set.terms[t.target.getAttribute("index")][0] = t.target.value;
+          save();
+        };
+        termHtml.querySelector(".termDeff").children[0].oninput = (t)=>{
+          set.terms[t.target.getAttribute("index")][1] = t.target.value;
+          save();
+        };
+        document.querySelector("tbody").appendChild(termHtml);
+
+        index+=1;
+      });
+      document.querySelector("#addTerm").onclick = ()=>{
+        let termHtml = termTemplate.cloneNode(true);
+        set.terms.push([]);
+        let num = document.querySelectorAll(".term").length;
+        termHtml.querySelector(".termNum").textContent=num;
+        termHtml.querySelector(".termTerm").children[0].setAttribute("index", num);
+        termHtml.querySelector(".termDeff").children[0].setAttribute("index", num);
+
+        termHtml.querySelector(".termTerm").children[0].oninput = (t)=>{
+          set.terms[t.target.getAttribute("index")][0] = t.target.value;
+          save();
+        };
+        termHtml.querySelector(".termDeff").children[0].oninput = (t)=>{
+          set.terms[t.target.getAttribute("index")][1] = t.target.value;
+          save();
+        };
+        document.querySelector("tbody").appendChild(termHtml);
+      };
+
+
+      function save(){
+        sets[window.setId] = set;
+
+        localStorage.setItem("sets", JSON.stringify(sets));
+      }
+      function remove(elem){
+
+        set.terms.splice(0+elem.parentElement.children[0].getAttribute("index"), 1)
+        save();
+        location.reload();
+      }
+      function setLink(href){
+        location.href=href+location.search;
+      }
+      function deleteSet(){
+        if (prompt("To confirm this operation, type in the name of this set:").toLowerCase() === set.name.toLowerCase()){
+          sets.splice(window.setId, 1)
+          localStorage.setItem("sets", JSON.stringify(sets));
+          location.href = "/";
+        }
+      }
+      document.body.style.display="";
+
+    </script>
+   
+  </body>
+</html>

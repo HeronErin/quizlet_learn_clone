@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <style type="text/css">
+      
+      .flashcard{
+        width: inherit%;
+        height: inherit%;
+        perspective: 1000px;
+        top: inherit;
+        left: inherit;
+        transition: transform 0.5s;
+
+      }
+      .flashcard-inner{
+          display: grid;
+          width: 100%;
+          height: 100%;
+          text-align: center;
+          transition: transform 1s;
+          transform-style: preserve-3d;
+      }
+    .flashcard-front, .flashcard-back {
+      grid-row-start: 1;
+      grid-column-start: 1;
+
+
+      position: absolute;
+      top: 0px;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden; /* Safari */
+      backface-visibility: hidden;
+
+
+    }
+    .flashcard-back{
+      transform: rotateY(180deg);
+    }
+    .flashcard[flip] .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+    .flashtext{
+      resize: none; 
+      width: 50vw;
+      height: 50vh;
+      transform: translate(3vw);
+
+    }
+    .flashcard.right{
+        transform: translate(100vw);
+    }
+    .flashcard.left{
+        transform: translate(-100vw);
+    }
+    </style>
+
+    <title>Libre-learn</title>
+ 
+  </head>
+  <body style="display: none;">
+    <center>
+
+
+      <div id="card-holder" style="position: absolute;left: 0px;top: 10vh;width: 100%; height: 100%; overflow-x: hidden;">
+      
+      	<div class="flashcard" onclick="toggleFlip(this)">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <textarea class="flashtext" readonly="true" id="front-text"> . </textarea>  
+            </div>
+            <div class="flashcard-back">
+              <textarea class="flashtext" readonly="true" id="back-text"> , </textarea>  
+            </div>
+          </div>
+        </div> 
+      
+
+          
+    </div> 
+    
+
+    
+      <button onclick=' lastCard()'>Prev </button>
+      <button onclick='nextCard()'>Next </button>
+    
+    
+	  </center>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      let cardTemplate = document.querySelector(".flashcard").cloneNode(true);
+      document.querySelector(".flashcard").remove();
+
+
+      let sets = JSON.parse(localStorage.getItem("sets") || "[]");
+      if (!location.search.includes("?")){
+        alert("404");
+        location.href = "/";
+      }
+      window.setId = parseInt(location.search.split("?")[1]);
+      var set = sets[window.setId];
+      if (set == undefined){
+        alert("set not found");
+        location.href = "/";
+      }
+      if (set.terms.length == 0){
+        alert("must have at least one card");
+        location.href="/set"+location.search;
+      }
+
+
+      var cardData = localStorage.getItem("cards:"+window.setId);
+      if (cardData==undefined){
+        cardData = {todo:set.terms.reverse(), finished: [], showAgain: []};
+      }
+
+
+
+      function getCard(){
+        if ((cardData.todo.length + cardData.showAgain.length) == 0){
+          return undefined;
+        }
+        // One in 4 chance of reviewing a card
+        if ((Math.floor(Math.random()*4)==0 | cardData.todo.length == 0)&&cardData.showAgain.length!=0){
+          return cardData.showAgain.pop();
+        }
+        return cardData.todo.pop();
+      }
+      function toggleFlip(card){
+        if (card.hasAttribute("flip")){
+          card.removeAttribute("flip");
+        }else{
+          card.setAttribute("flip", "true");
+        }
+      }
+
+
+      var left_cards = [];
+      var right_cards = [];
+      var current_card = undefined;
+      // Cards specific code
+      while (1){
+        let card = getCard();
+        if (card == undefined) {break;}
+        if (current_card === undefined){
+          current_card = genCard(card[0], card[1]);
+          document.querySelector("#card-holder").appendChild(current_card);
+        }else{
+          let tmp = genCard(card[0], card[1]);
+          tmp.classList.add("right");
+          document.querySelector("#card-holder").appendChild(tmp);
+          right_cards.unshift(tmp);
+        }
+      }
+
+      function nextCard(){
+        if (right_cards.length != 0){
+          left_cards.push(current_card);
+          current_card.classList.add("left")
+          current_card=right_cards.pop();
+          current_card.classList.remove("right");
+        }
+      }
+      function lastCard(){
+        if (left_cards.length != 0){
+          right_cards.push(current_card);
+          current_card.classList.add("right")
+          current_card=left_cards.pop();
+          current_card.classList.remove("left");
+        }
+      }
+
+      function genCard(x, y){
+        let cardNode = cardTemplate.cloneNode(true);
+        cardNode.querySelector("#front-text").value = x;
+        cardNode.querySelector("#back-text").value = y;
+        return cardNode;
+      }
+
+
+    	document.body.style.display="";
+    </script>
+   
+  </body>
+</html>

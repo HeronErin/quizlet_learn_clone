@@ -22,7 +22,7 @@
       }
     </style>
   </head>
-  <body>
+  <body style="display: none">
 
 <!-- Pop-up for creating new set -->
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -115,6 +115,9 @@
 
         if (name.length >= 4 && setText.length>= 4 && termSep.length != 0 && setSep.length != 0){
           document.querySelector(".alert").style.display="none";
+          if (setText.endsWith(setSep)){
+            setText=setText.substring(0, setText.length-setSep.length);
+          }
           let StudySet = setText.split(setSep).map((z)=>z.split(termSep));
           if (StudySet.filter((c)=>(c.length!=2)).length != 0){
             alert("Warning: Some terms in the set don't have matching definitions, it is recommended that you use different seperators, or fix the set manually!");
@@ -123,7 +126,7 @@
 
 
           let sets = JSON.parse(localStorage.getItem("sets") || "[]");
-          sets.unshift({name:name, terms:StudySet});
+          sets.push({name:name, terms:StudySet});
           localStorage.setItem("sets", JSON.stringify(sets));
           location.reload();
         }else{
@@ -149,8 +152,10 @@
       }
       });
       function onSetClick(i){
-        console.log(i)
+        location.href="/set?"+i;
       }
+
+      document.body.style.display=""
     </script>  
   </body>
 </html>
