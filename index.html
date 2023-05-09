@@ -113,7 +113,7 @@
         let setSep = document.querySelector("#setSeperator").value.replaceAll("\\n", "\n").replaceAll("\\t", "\t");
 
 
-        if (name.length >= 4 && setText.length>= 4 && termSep.length != 0 && setSep.length != 0){
+        if (name.length >= 4 && termSep.length != 0 && setSep.length != 0){
           document.querySelector(".alert").style.display="none";
           if (setText.endsWith(setSep)){
             setText=setText.substring(0, setText.length-setSep.length);

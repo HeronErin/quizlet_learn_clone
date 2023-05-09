@@ -11,11 +11,27 @@
       .answerChoice{
         width: 50%; display: block; margin: 10px;
       }
-      .answerChoice:hover{
+      .answerChoice:hover:not([correct]):not([incorrect]){
         background-color: #ccffff;
         -webkit-transition: background-color 300ms linear;
         -ms-transition: background-color 300ms linear;
         transition: background-color 300ms linear;
+      }
+      [correct]{
+        background-color: #66ff33;
+        -webkit-transition: background-color 400ms linear;
+        -ms-transition: background-color 400ms linear;
+        transition: background-color 400ms linear;
+      }
+      [incorrect]{
+        background-color: #ff0000;
+        -webkit-transition: background-color 400ms linear;
+        -ms-transition: background-color 400ms linear;
+        transition: background-color 400ms linear;
+      }
+      div[incorrect_transform]{
+        transform: translate(0px, -15vh);
+        transition: transform 0.75s;
       }
 
     </style>
@@ -24,13 +40,15 @@
  
   </head>
   <body style="display: none;">
+
+
      <!--Setting model-->
     <div class="modal fade" id="settingsModel" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
-            <button type="button" class="btn btn-link" onclick="settingsModel.toggle()">X</button>
+            <button type="button" class="btn btn-link" onclick="saveLearn(); location.reload();">X</button>
           </div>
           <div class="modal-body">
              <div class="form-switch">
@@ -44,13 +62,14 @@
               <label class="form-check-label" for="answerWithTerm">Answer with Terms</label><br>
 
               <input class="form-check-input" type="checkbox" id="answerWithDef" oninput="learnOpts.answerWithDeff=this.checked;saveSettings();">
-              <label class="form-check-label" for="answerWithDef">Answer with Definition</label><br>
+              <label class="form-check-label" for="answerWithDef">Answer with Definition</label><br><br><br>
+              
             </div>
-
+              <button class="btn btn-danger" onclick='if (confirm("Are you sure?")){localStorage.removeItem("learn:"+window.setId);location.reload()}'>Reset learn</button>
 
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="settingsModel.toggle()">Close</button>
+            <button type="button" class="btn btn-secondary" onclick="saveLearn(); location.reload();">Close</button>
           </div>
         </div>
       </div>
@@ -60,24 +79,71 @@
 
     <center>
 
-      <div style="width: 70vw; height: 60vh; left: 15vw; top: 5vh; position: absolute;" class="border">
-        <div style="height: 70%; width: 100%">
-    	     <p style="align-content: center; font-size: 20px;">asdasd</p>
+      <div style="width: 70vw ; height: 60vh; left: 15vw; top: 5vh; position: absolute;" class="border">
+        <div style="height: 42vh; width: 100%">
+    	     <p style="align-content: center; font-size: 20px;" id="question">asdasd</p>
            <img src="/assets/menu.svg" style="height: 40px;position: absolute;right:0px; top:0px;" onclick="settingsModel.toggle()">
          </div>
-         <div style="height: 30%; width: 100%; text-align: left;" class="answerHolder">
+         <div style="height: 18vh; width: 100%; text-align: left; display: relative" class="answerHolder">
+
+
+          <div id="multichoiceQuestion" class="ans" style="position: absolute;margin-left: 7px;margin-right: 7px; width: 100%; bottom: 1vh;">
             <span style="margin: 10px"> Choose matching term </span>
             <div style="height: 45%; display:flex; text-align: center;">
-              <div id="q1" class="answerChoice border border-primary rounded-3">1</div>
-              <div id="q2" class="answerChoice border border-primary rounded-3">2</div>
+              <div id="q1" class="answerChoice border border-primary rounded-3" onclick="answer(this)" index="0">1</div>
+              <div id="q2" class="answerChoice border border-primary rounded-3" onclick="answer(this)" index="1">2</div>
             </div>
             <div style="height: 45%; display:flex; text-align: center">
-              <div id="q1" class="answerChoice border border-primary rounded-3">3</div>
-              <div id="q2" class="answerChoice border border-primary rounded-3">4</div>
+              <div id="q3" class="answerChoice border border-primary rounded-3" onclick="answer(this)" index="2">3</div>
+              <div id="q4" class="answerChoice border border-primary rounded-3" onclick="answer(this)" index="3">4</div>
             </div>
          </div>
-         
 
+         <div style="margin-left: 7px;margin-right: 7px; position: absolute; bottom: 1vh; width: calc(100% - 14px);" id="writtenQuestion" class="ans">
+          <div>
+             <div style="height: 5vh">
+              <span>Your answer:</span>
+
+              <br></div>
+             <input type="text" placeholder="Type the answer" style="width: 100%; margin-bottom: 5px" id="writtenInput">
+             <div style="text-align: right; width: 100%;" id="writtenButtonHolder">
+               <button class="btn btn-link" style="font-size: 13px" onclick='dontKnow();'>Don't know</button>
+               <button class="btn btn-success" style="font-size: 13px" onclick='writtenSubmit();'>Submit</button>
+               <br>
+             </div>
+         </div>
+          <div style="position: absolute; bottom: 1vh; width: 100%; display: none;" id="correctAnswer">
+             <div style="height: 5vh">
+              <span>The correct answer was:</span>
+
+              <br></div>
+             <input type="text" placeholder="No correct answer" style="width: 100%; margin-bottom: 5px" id="correctAnswerBox" disabled>
+             <div style="text-align: right; width: 100%;" id="writtenButtonHolder">
+               <button class="btn btn-link" style="font-size: 13px" onclick='document.querySelector("#writtenInput").removeAttribute("incorrect"); document.querySelector("#writtenInput").setAttribute("correct", "true"); setTimeout(()=>{renderCard();saveLearn();}, 600);'>I was correct</button>
+               <button class="btn btn-warning" style="font-size: 13px" onclick=' nextIncorrect();'>Next</button>
+               <br>
+             </div>
+         </div>
+
+         </div>
+
+
+
+       </div>
+      </div>
+
+
+
+
+    <div style="width: 70vw ; height: 60vh; left: 15vw; top: 5vh; position: absolute; background-color: white; display: none; " class="border" id="winScreen">
+
+      <h2>Nice job, you are finished with this set!</h2>
+      <h5>This should be enough for now</h5>
+      <br><br><br>
+      <div>
+        <button onclick='localStorage.removeItem("learn:"+window.setId); location.reload()'>Reset progress</button>
+        <button>Back to set page</button>
+      </div>
 
       </div>
 
@@ -92,18 +158,56 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+
+
     <script type="text/javascript">
-    // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array#4550514
-    Array.prototype.sample = function(){
-      return this[Math.floor(Math.random()*this.length)];
-    }
+       let multichoiceQuestionTemplate = document.querySelector("#multichoiceQuestion").cloneNode(true);
+      document.querySelector("#multichoiceQuestion").remove();
 
+      let writtenQuestionTemplate = document.querySelector("#writtenQuestion").cloneNode(true);
 
+      
+    </script>
+    <script type="text/javascript">
       var learnOpts = JSON.parse(localStorage.getItem("learnSettings") || '{"shuffle":true,"answerWithTerm":false,"answerWithDeff":true,"writtenQuestions":false}');
       document.querySelector("#shuffleTerms").checked = learnOpts.shuffle;
       document.querySelector("#answerWithTerm").checked = learnOpts.answerWithTerm;
       document.querySelector("#answerWithDef").checked = learnOpts.answerWithDeff;
       document.querySelector("#writtenAnswers").checked = learnOpts.writtenQuestions;
+      var settingsModel = new bootstrap.Modal(document.querySelector("#settingsModel"));
+    </script>
+    <script type="text/javascript">
+      function shuffle(array) {
+          let counter = array.length;
+
+          // While there are elements in the array
+          while (counter > 0) {
+              // Pick a random index
+              let index = Math.floor(Math.random() * counter);
+
+              // Decrease counter by 1
+              counter--;
+
+              // And swap the last element with it
+              let temp = array[counter];
+              array[counter] = array[index];
+              array[index] = temp;
+          }
+
+          return array;
+      }
+    </script>
+
+
+    <script type="text/javascript">
+    // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array#4550514
+    Array.prototype.sample = function(){
+      return this[Math.floor(Math.random()*this.length)];
+    }
+    Array.prototype.samplePop = function(){
+      return this.splice(Math.floor(Math.random()*this.length), 1)[0];
+    }
+    Array.prototype.handleTerm = function(){return (learnOpts.answerWithTerm && learnOpts.answerWithDeff) ? shuffle(this): (learnOpts.answerWithTerm ? this.reverse() : this)}
 
 
       let sets = JSON.parse(localStorage.getItem("sets") || "[]");
@@ -123,11 +227,187 @@
       }
 
 
-      var settingsModel = new bootstrap.Modal(document.querySelector("#settingsModel"));
+      
+      var cardData = localStorage.getItem("learn:"+window.setId);
+      if (cardData==undefined){
+        cardData = {next: set.terms.slice().reverse(), current: null, review: [], currentOptions: null, currentType: null, cardCount: 0, hasWon: false};
+        
+      }else{cardData=JSON.parse(cardData)}
+
+      if (cardData.hasWon)
+        document.querySelector("#winScreen").style.display="";
 
 
+      
 
-      function saveSettings(){localStorage.setItem("learnSettings", JSON.stringify(learnOpts))}
+
+      function randomOtherChoice(past){
+        let i = 0;
+        let ret;
+        while (i!=20){
+          ret = set.terms.sample();
+          if (!past.map((p)=>(p[0].toLocaleLowerCase() == ret[0].toLocaleLowerCase() ||  p[1].toLocaleLowerCase() == ret[1].toLocaleLowerCase()) ).includes(true)){break;}
+          i+=1;
+        }
+        return ret;
+      }
+
+      
+      function renderCard(restore){
+        if (restore&&cardData.current){
+          document.querySelector(".ans").remove();
+          if (cardData.currentType == "multi"){
+            let mcqt = multichoiceQuestionTemplate.cloneNode(true);
+            document.querySelector("#question").textContent = cardData.current[0];
+
+            let achoices = shuffle(Array.from(mcqt.querySelectorAll(".answerChoice")));
+            let v = [cardData.current];
+            achoices[0].textContent = cardData.current[1];
+
+            let co = JSON.parse(JSON.stringify( cardData.currentOptions));
+
+            window.correctAnswer = achoices[0].getAttribute("index")
+            achoices.splice(1).forEach((out)=>{
+              let x = co.pop();
+                out.textContent = x;
+            });
+        
+
+
+            document.querySelector(".answerHolder").appendChild(mcqt);
+      
+          }else{
+            let mcqt = writtenQuestionTemplate.cloneNode(true);
+            document.querySelector("#question").textContent = cardData.current[0];
+            mcqt.querySelector("#correctAnswerBox").value = cardData.current[1];
+            document.querySelector(".answerHolder").appendChild(mcqt);
+          }
+          return;
+        }
+
+        let doReview = cardData.cardCount%8>4;
+        cardData.cardCount+=1;
+
+        console.log(doReview);
+        console.log(cardData.next.length==0);
+        console.log(cardData.review.length != 0)
+        if ((doReview||cardData.next.length==0) && cardData.review.length != 0){
+          cardData.current = (learnOpts.shuffle ? cardData.review.samplePop(): cardData.review.pop()).slice().handleTerm();
+          document.querySelector(".ans").remove();
+          if (cardData.current[2] == 100 || !learnOpts.writtenQuestions){multiChoice();}
+          else{
+            written();
+          }
+          
+        }else if(cardData.next.length!=0){
+          cardData.current = (learnOpts.shuffle ? cardData.next.samplePop() :cardData.next.pop()).slice().handleTerm();
+          document.querySelector(".ans").remove();
+          multiChoice();
+
+        }else{document.querySelector("#winScreen").style.display=""; cardData.hasWon=true;}
+
+      }
+      function multiChoice(){
+          cardData.currentType="multi";
+          let mcqt = multichoiceQuestionTemplate.cloneNode(true);
+          document.querySelector("#question").textContent = cardData.current[0];
+
+          let achoices = shuffle(Array.from(mcqt.querySelectorAll(".answerChoice")));
+          let v = [cardData.current];
+          achoices[0].textContent = cardData.current[1];
+          cardData.currentOptions = [cardData.current[1]];
+          window.correctAnswer = achoices[0].getAttribute("index")
+          achoices.splice(1).forEach((out)=>{
+              let a2 = randomOtherChoice(v);
+              v.push(a2);
+              cardData.currentOptions.push(a2[1]);
+              out.textContent = a2[1];
+          });
+
+
+          document.querySelector(".answerHolder").appendChild(mcqt);
+      }
+      function written(){
+          cardData.currentType="written";
+          let mcqt = writtenQuestionTemplate.cloneNode(true);
+          document.querySelector("#question").textContent = cardData.current[0];
+          mcqt.querySelector("#correctAnswerBox").value = cardData.current[1];
+          document.querySelector(".answerHolder").appendChild(mcqt);
+      }
+
+      function answer(ele){
+        if (ele.getAttribute('index')==window.correctAnswer){
+          ele.setAttribute("correct", "true");
+          setTimeout(()=>{
+            if (cardData.current.length == 2) cardData.current.push(100);
+            if (learnOpts.writtenQuestions){
+              cardData.current[2] = Math.max(cardData.current[2]-50, 0)
+              cardData.review.unshift(cardData.current);
+            }
+
+            renderCard();
+            saveLearn();
+          }, 400);
+        }else{
+          ele.setAttribute("incorrect", "true");
+          setTimeout(()=>{
+            if (cardData.current.length == 2) cardData.current.push(100);
+            cardData.current[2] = Math.min(cardData.current[2]+50, 100)
+            cardData.review.unshift(cardData.current);
+            
+            renderCard();
+            saveLearn();
+          }, 400);
+        }
+      }
+
+
+      function dontKnow(){
+        document.querySelector("#writtenInput").setAttribute("incorrect", "true");
+          setTimeout(()=>{
+            if (cardData.current.length == 2) cardData.current.push(100);
+            cardData.current[2] = Math.min(cardData.current[2]+50, 100)
+            cardData.review.unshift(cardData.current);
+            
+            renderCard();
+            saveLearn();
+          }, 400);
+      }
+      function nextIncorrect(){
+        cardData.current[2] = Math.min(cardData.current[2]+50, 100);
+        cardData.review.unshift(cardData.current);
+        renderCard();
+        saveLearn();
+      }
+      function writtenSubmit(){
+        if (document.querySelector("#writtenInput").value.trim().toLocaleLowerCase() == cardData.current[1].trim().toLocaleLowerCase()){
+          document.querySelector("#writtenInput").setAttribute("correct", "true");
+          setTimeout(()=>{
+            renderCard();
+            saveLearn();
+          }, 500);
+        }else{
+          document.querySelector("#writtenButtonHolder").style.visibility="hidden"
+          document.querySelector("#writtenInput").setAttribute("incorrect", "true");
+          document.querySelector("#writtenInput").disabled=true;
+          document.querySelector("#writtenInput").parentElement.setAttribute("incorrect_transform", "true");  
+
+          setTimeout(()=>{
+            document.querySelector("#correctAnswer").style.display="";
+
+          }, 1000);
+          
+          // setTimeout(()=>{}, 750) ;
+        }
+      }
+
+      function saveLearn(){
+        localStorage.setItem("learn:"+window.setId, JSON.stringify(cardData));
+      }
+      function saveSettings(){localStorage.setItem("learnSettings", JSON.stringify(learnOpts)); }
+
+      renderCard(true);
+      saveLearn();
     	document.body.style.display="";
     </script>
    
