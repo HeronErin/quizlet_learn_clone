@@ -151,8 +151,15 @@
           this.selectionEnd = start + 1;
       }
       });
+      function fixhref(x){
+        if (location.href.includes("github")){
+          return "/quizlet_learn_clone" + x;
+        }else{
+          return x;
+        }
+      }
       function onSetClick(i){
-        location.href="/set?"+i;
+        location.href=fixhref("/set?"+i);
       }
 
       document.body.style.display=""
