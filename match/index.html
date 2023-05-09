@@ -15,11 +15,92 @@
  
   </head>
   <body style="display: none;">
-    <center>
-    	test
+    <div class="border border-primary border-2" style="width: 80vw; height: 90vh; position: absolute; left: 10vw; top: 5vh; z-index: -1 " id="card-holder">
+      <div class="border" style="width: fit-content; height: fit-content; display: block; position: absolute;">This is some test text</div>
+    </div>
+    <script type="text/javascript">
+      function shuffle(array) {
+          let counter = array.length;
 
-	</center>
+          // While there are elements in the array
+          while (counter > 0) {
+              // Pick a random index
+              let index = Math.floor(Math.random() * counter);
 
+              // Decrease counter by 1
+              counter--;
+
+              // And swap the last element with it
+              let temp = array[counter];
+              array[counter] = array[index];
+              array[index] = temp;
+          }
+
+          return array;
+      }
+    </script>
+    <script type="text/javascript">
+      let sets = JSON.parse(localStorage.getItem("sets") || "[]");
+      if (!location.search.includes("?")){
+        alert("404");
+        location.href = "/";
+      }
+      window.setId = parseInt(location.search.split("?")[1]);
+      var set = sets[window.setId];
+      if (set == undefined){
+        alert("set not found");
+        location.href = "/";
+      }
+      if (set.terms.length == 0){
+        alert("must have at least one term");
+        location.href="/set"+location.search;
+      }
+
+
+      let matchTerms = shuffle(set.terms.slice()).slice(0, 6);
+    </script>
+
+
+    <script type="text/javascript">
+      //taken from https://www.w3schools.com/howto/howto_js_draggable.asp
+       function dragElement(elmnt) {
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        elmnt.onmousedown = dragMouseDown;
+        
+
+        function dragMouseDown(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // get the mouse cursor position at startup:
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          document.onmouseup = closeDragElement;
+          // call a function whenever the cursor moves:
+          document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+          e = e || window.event;
+          e.preventDefault();
+          // calculate the new cursor position:
+          pos1 = pos3 - e.clientX;
+          pos2 = pos4 - e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          // set the element's new position:
+          elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+          elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+          // stop moving when mouse button is released:
+          document.onmouseup = null;
+          document.onmousemove = null;
+        }
+      }
+
+    </script>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
