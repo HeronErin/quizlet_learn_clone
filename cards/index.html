@@ -135,6 +135,13 @@
 
           return array;
       }
+      function fixhref(x){
+        if (location.href.includes("github")){
+            return "/quizlet_learn_clone" + x;
+        }else{
+            return x;
+        }
+    }
     </script>
     <script type="text/javascript">
       let cardTemplate = document.querySelector(".flashcard").cloneNode(true);
@@ -144,17 +151,17 @@
       let sets = JSON.parse(localStorage.getItem("sets") || "[]");
       if (!location.search.includes("?")){
         alert("404");
-        location.href = "/";
+        location.href = fixhref("/");
       }
       window.setId = parseInt(location.search.split("?")[1]);
       var set = sets[window.setId];
       if (set == undefined){
         alert("set not found");
-        location.href = "/";
+        location.href = fixhref("/");
       }
       if (set.terms.length == 0){
         alert("must have at least one card");
-        location.href="/set"+location.search;
+        location.href=fixhref("/set"+location.search);
       }
 
 
