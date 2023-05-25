@@ -2,4 +2,4 @@
 Quizlet learn without a paywall
 
 Still a WIP.
-You can view the website here: https://heronerin.github.io/quizlet_learn_clone/
+You can view the website here: (http://librelearn.eu.org/
